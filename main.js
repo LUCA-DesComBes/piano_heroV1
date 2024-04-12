@@ -1,123 +1,165 @@
-const container = document.createElement("div")
-container.classList = "container";
-document.body.appendChild(container)
-const white = document.createElement("div");
+const container = document.getElementById('container');
 
-function piano(){
-    for(let d = 0; d < 2; d++){
-        for(let i = 0; i < 2; i++){
-            const white = document.createElement("div");
-            white.classList = "white";
-            container.appendChild(white);
-            const black = document.createElement("div");
-            black.classList = "black";
-            white.appendChild(black);
-            white.setAttribute("data-id", "1")
-        }
-            const div = document.createElement("div");
-            div.classList = "white";
-            container.appendChild(div);
-            div.setAttribute("data-id", "2")
-                for (let j = 0; j < 3; j++) {   
-                    const white = document.createElement("div");
-                    white.classList = "white";
-                    container.appendChild(white);
-                    const black = document.createElement("div");
-                    black.classList = "black";
-                    white.appendChild(black);
-                    white.setAttribute("data-id", "3")
-                }
-                const blanc = document.createElement("div");
-            blanc.classList = "white";
-            container.appendChild(blanc);
-           blanc.setAttribute("data-id", "4")
-        }    
+function start(){
+  const keyword = document.createElement('div');
+  keyword.classList.add('keyword');
+  container.appendChild(keyword);
+
+  let pattern = 'BNBNBBNBNBNBBNBNBBNBNBNBB';
+  let notesIndex = 0;
+  let whiteConsecutive = 0;
+  let decalage = 0;
+
+  for(let i = 0; i < pattern.length; i++){
+    const notes = document.createElement('div');
+    if(pattern[i] === 'B'){
+      // Create white notes
+      notes.classList.add('notes' + (notesIndex+1), 'white');
+      whiteConsecutive++;
+    } else {
+      // Create black notes
+      notes.classList.add('notes' + (notesIndex+1), "black");
+      if(whiteConsecutive === 2){
+        decalage += 4;
+        notes.style.left = decalage + 'em';
+      } else {
+        notesIndex === 1 ? decalage += 1.5 : decalage += 2;
+        notes.style.left = decalage + 'em';
+      }
+      whiteConsecutive = 0;
     }
-piano();
-
-
-const btn = document.createElement("button");
-btn.classList = "btn";
-btn.innerHTML = `MAPPING`
-document.body.appendChild(btn)
-
-function mappingBtn(){
-    btn.addEventListener("click", () => {
-        white.classList.add("aqua")
-    })
-}
-mappingBtn();
-// for(let i = 0; i <= 17; i++){
-
-
-//     white.addEventListener("click", () => {
-//         let rdm = Math.floor(Math.random() * 10);
-//         white.style.backgroundColor = "aqua"
-//     })
-// }
-
-
-navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
-
-let notes = [{
-    Do: "do",
-    Ré: "ré",
-    Mi: "mi",
-    Fa: "fa",
-    Sol: "sol",
-    La: "la",
-    Si: "si"
-}]
-
-function onMIDISuccess(midiAccess) {
-    midiAccess.inputs.forEach((input) => {
-        console.log(input)
-        input.onmidimessage = onMIDIMessage;
-    });
-}
-
-function onMIDIFailure(error) {
-    // console.log(error);
-}
-
-function onMIDIMessage(event) {
-  let str = `MIDI message received at timestamp ${event.timeStamp}[${event.data.length} bytes]: `;
-  for (const character of event.data) {
-    str += `0x${character.toString(16)} `;
+    keyword.appendChild(notes);
+    notesIndex++;
   }
-   console.log(event.data);
-  console.log(str);
+  initEvent();
 }
 
-function startLoggingMIDIInput(midiAccess) {
-  midiAccess.inputs.forEach((entry) => {
-    entry.onmidimessage = onMIDIMessage;
-  });
-}
+function initEvent(){
 
-function getMIDIMessage(message) {
-    let command = message.data[0];
-    let note = message.data[1];
-    let velocity = (message.data.length > 2) ? message.data[2] : 0; // a velocity value might not be included with a noteOff command
-
-    switch (command) {
-        case 144: // noteOn
-            if (note > 0) {
-                noteOn();
-            } else {
-                noteOff();
-            }
-            break;
-        case 128: // noteOff
-            noteOff();
-            break;
-        // we could easily expand this switch statement to cover other types of commands such as controllers or sysex
+  function midiMessageReceived(event) {
+    const notes_ON = 9;
+    const notes_OFF = 8
+    const cmd = event.data[0]; 
+    const pitch = event.data[1];
+    const timestamp = Date.now();
+    if (cmd === notes_OFF) { 
+        const notesStartTime = notessOn.get(pitch);
+        if (notesStartTime) {
+          const notes = document.querySelector('.notes' + (pitch - 47));
+          if(notes){
+            console.log(pitch- 47);
+            notes.classList.remove('active');
+          }
+          notessOn.delete(pitch);
+        }
+    } else if (cmd === notes_ON) { 
+        const notes = document.querySelector('.notes' + (pitch - 47));
+        if(notes){
+          console.log(pitch- 47);
+          notes.classList.add('active');
+        }
+        notessOn.set(pitch, timestamp);
     }
-   console.log(message.data[1]);
+  }
+
+  const notessOn = new Map();
+
+  function createMapping(){
+    btn.addEventListener("click", clickMapping)  
+   }
+
+   const btn = document.createElement("button");
+   btn.classList = "button"
+   btn.innerHTML = `MAP`
+   container.appendChild(btn)  
+   let isMapping = false;
+
+   function clickMapping(event){
+    let key_div_map = [{}];
+    let mapCounter = 0;
+    isMapping = true;
+    let notesIndex = 0;
+    const divColor = document.querySelector(".notes .white")
+    if(isMapping === true){
+      let noteSequences = [{
+        note1: "48", 
+        note2: "49", 
+        note3: "50", 
+        note4: "51", 
+        note5: "52", 
+        note6: "53", 
+        note7: "54", 
+        note8: "55", 
+        note9: "56", 
+        note10: "57", 
+        note11: "58", 
+        note12: "59", 
+        note12: "60", 
+        note13: "61", 
+        note14: "62", 
+        note15: "63", 
+        note16: "64", 
+        note17: "65", 
+        note18: "66", 
+        note19: "67", 
+        note20: "68", 
+        note21: "69", 
+        note22: "70", 
+        note23: "71", 
+        note24: "72"
+      }];
+
+      let map = []; 
+      btn.innerHTML = `MAPPING`;
+        btn.disabled = true;
+        alert("Attention, tu map ton MIDI donc si tu reappuies sur la même touche et bah CHEH!!!" + " C'est tes choix")
+            key_div_map.push(noteSequences)
+            console.log(key_div_map)
+            const pitche = event.data;
+            const notes = document.querySelector('.notes .white' + (pitche - 47));
+            for(let index = 0; index < 25; index++){
+              notes.classList.add("yellow")
+            }
+      }  else {
+      console.warn("error");
+    } 
+  }
+
+  function onMIDISuccess(midiAccess) {
+    console.log('MIDI Access Granted');
+    initDevices(midiAccess);
+  }
+
+  function onMIDIFailure() {
+    console.error('MIDI Access Denied');
+  }
+
+  navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+
+  function initDevices(midiAccess) {
+    midiIn = [];
+    midiOut = [];
+    const inputs = midiAccess.inputs.values();
+    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+        midiIn.push(input.value);
+    }
+    const outputs = midiAccess.outputs.values();
+    for (let output = outputs.next(); output && !output.done; output = outputs.next()) {
+        midiOut.push(output.value);
+    }
+    startListening();
+    createMapping();
+  }
+
+  function startListening() {
+    for (const input of midiIn) {
+      input.addEventListener('midimessage', midiMessageReceived);
+    }
+  }
+
 
 }
 
-function noteOn(note) {
-}
-function noteOff(note) {
-}
+start();
+ 
+
